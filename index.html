@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dulcería</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #fff5f5;
+}
+
+header{
+    background-color: #ff4d6d;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+nav{
+    background-color: #ff758f;
+    padding: 10px;
+    text-align: center;
+}
+
+nav a{
+    color: white;
+    text-decoration: none;
+    margin: 15px;
+    font-weight: bold;
+}
+
+.productos{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.producto{
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.producto img{
+    width: 100%;
+    height: 150px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+}
+
+.precio{
+    color: green;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.whatsapp{
+    background-color: #25D366;
+    color: white;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.whatsapp:hover{
+    background-color: #1ea952;
+}
+
+footer{
+    background-color: #ff4d6d;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Dulcería Tere</h1>
+    <p>Los mejores dulces al mejor precio</p>
+</header>
+
+<nav>
+    <a href="#">Inicio</a>
+</nav>
+
+<section class="productos">
+
+    <div class="producto">
+        <img src="bombon.jpeg" alt="Paleta Payaso">
+        <h3>Galleta con Bombon</h3>
+        <p class="precio">$1</p>
+    </div>
+
+    <div class="producto">
+        <img src="chicle.jpeg" alt="Pulparindo">
+        <h3>Chicle</h3>
+        <p class="precio">$1.50</p>
+    </div>
+
+    <div class="producto">
+        <img src="duvalin.jpeg" alt="Lucas Muecas">
+        <h3>Duvalin</h3>
+        <p class="precio">$2.50</p>
+    </div>
+
+    <div class="producto">
+        <img src="galletas.jpeg" alt="Pelón Pelo Rico">
+        <h3>Galleta De Barquillo Sabor Sainilla</h3>
+        <p class="precio">$3</p>
+    </div>
+
+    <div class="producto">
+        <img src="gelatinas.jpeg" alt="Mazapán">
+        <h3>Gelatinas</h3>
+        <p class="precio">$1</p>
+    </div>
+
+    <div class="producto">
+        <img src="gomitas.jpeg" alt="Skwinkles">
+        <h3>Gomitas(Viborita)</h3>
+        <p class="precio">$1</p>
+    </div>
+
+    <div class="producto">
+        <img src="lunetas.jpeg" alt="Panditas">
+        <h3>Lunetas</h3>
+        <p class="precio">$4</p>
+    </div>
+
+    <div class="producto">
+        <img src="maruchan.jpeg" alt="Lucas Gusano">
+        <h3>Maruchan</h3>
+        <p class="precio">$19</p>
+    </div>
+
+    <div class="producto">
+        <img src="mazapan.jpeg" alt="Bubbaloo">
+        <h3>Mazapan</h3>
+        <p class="precio">$4</p>
+    </div>
+
+    <div class="producto">
+        <img src="nose.jpeg" alt="Rockaleta">
+        <h3>Cocadas</h3>
+        <p class="precio">$2</p>
+    </div>
+
+    <div class="producto">
+        <img src="obleas.jpeg" alt="Carlos V">
+        <h3>Obleas</h3>
+        <p class="precio">$1.50</p>
+    </div>
+    <div class="producto">
+        <img src="Trufas.jpeg" alt="Lunetas Selfies">
+        <h3>Trufas Chocolate, vainilla</h3>
+        <p class="precio">$2</p>
+    </div>
+
+    <div class="producto">
+        <img src="Huevitos de chocolate blanco.jpeg" alt="Lucas Salsagheti">
+        <h3>Huevitos Chocolate Blanco</h3>
+        <p class="precio">$3x1</p>
+    </div>
+     <div class="producto">
+        <img src="Bolsa Cacahuate.jpeg" alt="Lucas Salsagheti">
+        <h3>Bolsa Cacahuate</h3>
+        <p class="precio">$3x1</p>
+    </div>
+</section>
+
+<div style="text-align:center; margin:20px;">
+    <a href="https://wa.me/525612617515?text=Hola,%20quiero%20hacer%20un%20pedido"
+       target="_blank"
+       class="whatsapp">
+       📱 Pedir por WhatsApp
+    </a>
+</div>
+
+<footer>
+    <p>© 2026 Dulcería Axel</p>
+</footer>
+
+</body>
+</html>
