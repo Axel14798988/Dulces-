@@ -531,11 +531,11 @@ Eliminar
     <p>Dulcería</p>
 </footer>
 <script>
-// Carrito y botones
+
 let carrito = {};
 let botones = {};
 
-// Agregar producto
+
 function agregarProducto(nombre, precio, boton){
 
     botones[nombre] = boton;
@@ -554,7 +554,7 @@ function agregarProducto(nombre, precio, boton){
     actualizarCarrito();
 }
 
-// Eliminar una unidad
+
 function eliminarProducto(nombre){
 
     if(!carrito[nombre]){
@@ -582,7 +582,7 @@ function eliminarProducto(nombre){
     actualizarCarrito();
 }
 
-// Actualizar carrito
+
 function actualizarCarrito(){
 
     let lista = document.getElementById("listaProductos");
@@ -639,7 +639,7 @@ function enviarWhatsApp(){
 
     mensaje += "%0A *Total: $" + total.toFixed(2) + "";
 
-    let telefono = "525612617515";
+    let telefono = "525571667676";
 
     window.open(
         "https://wa.me/" + telefono + "?text=" + mensaje,
