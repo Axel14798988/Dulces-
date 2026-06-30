@@ -215,7 +215,7 @@ footer{
 </nav>
 <div id="carrito" style="display:none;">
 
-    <h2>🛒 Carrito</h2>
+    <h2>Carrito</h2>
 
     <div id="listaProductos"></div>
     <h3>Total: $<span id="total">0</span></h3>
@@ -436,31 +436,95 @@ Eliminar
         <h3>Cachetadas</h3>
         <p class="precio">$1.50</p>
 <button class="agregar"
-onclick="agregarProducto('Lunetas',4,this)">
+onclick="agregarProducto('Cachetadas',1.50,this)">
 Agregar (0)
 </button>
 
 <button class="eliminar"
-onclick="eliminarProducto('Lunetas')">
+onclick="eliminarProducto('Cachetadas')">
 Eliminar
 </button>
     </div>
     <div class="producto">
         <img src="Papas.jpeg" alt="Paleta Payaso">
-        <h3>Papas (Variedad)</h3>
-        <p class="precio">$15, 17, 19</p>
+        <h3>Papas Sol</h3>
+        <p class="precio">$16</p>
 <button class="agregar"
-onclick="agregarProducto('Papas (Variedad)',15,this)">
+onclick="agregarProducto('Papas Sol',16,this)">
 Agregar (0)
 </button>
 
 <button class="eliminar"
-onclick="eliminarProducto('Papas (Variedad)')">
+onclick="eliminarProducto('Papas Sol')">
+Eliminar
+</button>
+    </div>
+    <div class="producto">
+        <img src="chetoschurrito.jpeg" alt="Paleta Payaso">
+        <h3>Papas churrito</h3>
+        <p class="precio">$16</p>
+<button class="agregar"
+onclick="agregarProducto('Papas churrito',16,this)">
+Agregar (0)
+</button>
+
+<button class="eliminar"
+onclick="eliminarProducto('Papas churrito')">
+Eliminar
+</button>
+    </div>
+
+    <div class="producto">
+        <img src="chetosdetaco.jpeg" alt="Paleta Payaso">
+        <h3>Papas Takis</h3>
+        <p class="precio">$16</p>
+<button class="agregar"
+onclick="agregarProducto('Papas Takis',16,this)">
+Agregar (0)
+</button>
+<button class="eliminar"
+onclick="eliminarProducto('Papas Takis')">
+Eliminar
+</button>
+    </div>
+    <div class="producto">
+        <img src="Chetosdequeso.jpeg" alt="Paleta Payaso">
+        <h3>Chetos de Queso</h3>
+        <p class="precio">$15</p>
+<button class="agregar"
+onclick="agregarProducto('Chetos de Queso',15,this)">
+Agregar (0)
+</button>
+
+<button class="eliminar"
+onclick="eliminarProducto('Chetos de Queso')">
+Eliminar
+</button>
+    </div>
+
+        <div class="producto">
+        <img src="chetosnacho.jpeg" alt="Paleta Payaso">
+        <h3>Nachos de queso</h3>
+        <p class="precio">$19</p>
+<button class="agregar"
+onclick="agregarProducto('Nachos de queso',19,this)">
+Agregar (0)
+</button>
+<button class="eliminar"
+onclick="eliminarProducto('Nachos de queso')">
 Eliminar
 </button>
     </div>
 
 </section>
+</section>
+
+<div style="text-align:center; margin:20px;">
+    <a href="https://wa.me/525571667676?text=Hola,%20quiero%20hacer%20un%20pedido"
+       target="_blank"
+       class="whatsapp">
+    Pedir por WhatsApp
+    </a>
 </div>
 
 <footer>
@@ -575,7 +639,7 @@ function enviarWhatsApp(){
 
     mensaje += "%0A *Total: $" + total.toFixed(2) + "";
 
-    let telefono = "525571667676";
+    let telefono = "525612617515";
 
     window.open(
         "https://wa.me/" + telefono + "?text=" + mensaje,
