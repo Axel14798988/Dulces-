@@ -236,15 +236,14 @@ Carrito
 onclick="agregarProducto('Chicle',1.5,this)">
 Agregar (0)
 </button>
-
-<button class="eliminar"
-onclick="eliminarProducto('Chicle')">
-Eliminar
-</button>
+    </div>
 </div>
         </div>
         </div>
     </div>
+
+
+
     <div class="producto">
         <img src="lunetas.jpeg" alt="Panditas">
         <h3>Lunetas</h3>
@@ -444,6 +443,52 @@ Agregar (0)
 onclick="eliminarProducto('Cachetadas')">
 Eliminar
 </button>
+
+    </div>
+
+        <div class="producto">
+        <img src="Obleacajeta.jpeg" alt="Lucas Salsagheti">
+        <h3>Oblea con Cajeta</h3>
+        <p class="precio">$3.50</p>
+        <button class="agregar"
+onclick="agregarProducto('Oblea con Cajeta',3.50,this)">
+Agregar (0)
+</button>
+
+<button class="eliminar"
+onclick="eliminarProducto('Oblea con Cajeta')">
+Eliminar
+</button>
+        </div>
+
+    <div class="producto">
+        <img src="Paletapintaazul.jpeg" alt="Lucas Salsagheti">
+        <h3>Paleta Pinta Azul</h3>
+        <p class="precio">$3</p>
+        <button class="agregar"
+onclick="agregarProducto('Paleta Pinta Azul',3,this)">
+Agregar (0)
+</button>
+<button class="eliminar"
+onclick="eliminarProducto('Paleta Pinta Azul')">
+Eliminar
+</button>
+    </div>
+</button>
+</div>
+    <div class="producto">
+        <img src="Paletamano.jpeg" alt="Lucas Salsagheti">
+        <h3>Paleta de Mano</h3>
+        <p class="precio">$3</p>
+        <button class="agregar"
+onclick="agregarProducto('Paleta de Mano',3,this)">
+Agregar (0)
+</button>
+
+<button class="eliminar"
+onclick="eliminarProducto('Paleta de Mano')">
+Eliminar
+</button>
     </div>
     <div class="producto">
         <img src="Papas.jpeg" alt="Paleta Payaso">
@@ -517,16 +562,25 @@ Eliminar
     </div>
 
 </section>
+</section>
+
+<div style="text-align:center; margin:20px;">
+    <a href="https://wa.me/525571667676?text=Hola,%20quiero%20hacer%20un%20pedido"
+       target="_blank"
+       class="whatsapp">
+    Pedir por WhatsApp
+    </a>
+</div>
 
 <footer>
     <p>Dulcería</p>
 </footer>
 <script>
-
+// Carrito y botones
 let carrito = {};
 let botones = {};
 
-
+// Agregar producto
 function agregarProducto(nombre, precio, boton){
 
     botones[nombre] = boton;
@@ -545,7 +599,7 @@ function agregarProducto(nombre, precio, boton){
     actualizarCarrito();
 }
 
-
+// Eliminar una unidad
 function eliminarProducto(nombre){
 
     if(!carrito[nombre]){
@@ -573,7 +627,7 @@ function eliminarProducto(nombre){
     actualizarCarrito();
 }
 
-
+// Actualizar carrito
 function actualizarCarrito(){
 
     let lista = document.getElementById("listaProductos");
@@ -630,7 +684,7 @@ function enviarWhatsApp(){
 
     mensaje += "%0A *Total: $" + total.toFixed(2) + "";
 
-    let telefono = "525571667676";
+    let telefono = "525612617515";
 
     window.open(
         "https://wa.me/" + telefono + "?text=" + mensaje,
