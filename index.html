@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dulcer&iacute;a Tere, tienda web de dulces, botanas y regalos con pedido por WhatsApp.">
+  <title>Dulcer&iacute;a Tere | Tienda web</title>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="particles" aria-hidden="true"></canvas>
+
+  <header class="site-header">
+    <nav class="navbar glass">
+      <a class="brand" href="#" aria-label="Inicio Dulceria Tere">
+        <span class="brand-mark">DT</span>
+        <span>
+          <strong>Dulcer&iacute;a Tere</strong>
+          <small>Dulces, botanas y detalles</small>
+        </span>
+      </a>
+
+      <form class="search-box" role="search">
+        <input id="searchInput" type="search" placeholder="Buscar chocolates, gomitas, paletas..." autocomplete="off">
+      </form>
+
+      <div class="nav-actions">
+        <button class="icon-button" id="themeToggle" type="button" aria-label="Cambiar modo oscuro" title="Modo oscuro">
+          <span aria-hidden="true">&#9680;</span>
+        </button>
+        <button class="icon-button cart-toggle" id="cartToggle" type="button" aria-label="Abrir carrito" title="Carrito">
+          <span aria-hidden="true">&#128722;</span>
+          <b id="cartCount">0</b>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content glass">
+        <p class="eyebrow">Sabores para cada antojo</p>
+        <h1>Dulcer&iacute;a Tere</h1>
+        <p>Arma tu pedido de dulces, botanas, pi&ntilde;atas y detalles. Compra facil y envia tu lista directa por WhatsApp.</p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#products">Ver productos</a>
+          <button class="secondary-button" id="openBestSellers" type="button">Mas vendidos</button>
+        </div>
+      </div>
+      <div class="hero-card glass" aria-label="Promocion de temporada">
+        <img src="https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?auto=format&fit=crop&w=900&q=80" alt="Dulces surtidos de colores">
+        <div>
+          <span>Oferta dulce</span>
+          <strong>Dulces para todos tus antojos</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbar glass" aria-label="Filtros de tienda">
+      <div>
+        <p class="section-kicker">Catalogo</p>
+        <h2>Encuentra tu favorito</h2>
+      </div>
+      <div class="category-tabs" id="categoryTabs" aria-label="Categorias"></div>
+    </section>
+
+    <section class="store-layout" id="products">
+      <aside class="summary-panel glass">
+        <h3>Tu seleccion</h3>
+        <p id="resultsText">Cargando productos...</p>
+        <div class="mini-stats">
+          <span><b id="favoriteCount">0</b> favoritos</span>
+          <span><b id="stockCount">0</b> disponibles</span>
+        </div>
+      </aside>
+
+      <div class="product-grid" id="productGrid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+    <div class="cart-panel glass">
+      <div class="cart-header">
+        <div>
+          <p class="section-kicker">Pedido</p>
+          <h2>Carrito</h2>
+        </div>
+        <button class="icon-button" id="closeCart" type="button" aria-label="Cerrar carrito">&times;</button>
+      </div>
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-footer">
+        <div class="cart-total">
+          <span>Total</span>
+          <strong id="cartTotal">$0.00</strong>
+        </div>
+        <button class="primary-button full" id="whatsappOrder" type="button">Pedir por WhatsApp</button>
+        <button class="secondary-button full" id="clearCart" type="button">Vaciar carrito</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card glass">
+      <button class="icon-button modal-close" id="closeModal" type="button" aria-label="Cerrar detalles">&times;</button>
+      <div class="modal-image-wrap" id="modalImageWrap">
+        <img id="modalImage" src="" alt="">
+      </div>
+      <div class="modal-content">
+        <p class="section-kicker" id="modalCategory"></p>
+        <h2 id="modalTitle"></h2>
+        <p id="modalDescription"></p>
+        <div class="modal-tags" id="modalTags"></div>
+        <div class="modal-price" id="modalPrice"></div>
+        <div class="modal-actions">
+          <button class="primary-button" id="modalAddCart" type="button">Agregar al carrito</button>
+          <button class="secondary-button" id="modalFavorite" type="button">Favorito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="managerModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="managerTitle">
+    <div class="manager-card glass">
+      <div class="manager-header">
+        <div>
+          <p class="section-kicker">Control interno</p>
+          <h2 id="managerTitle">Productos</h2>
+        </div>
+        <button class="icon-button" id="closeManager" type="button" aria-label="Cerrar panel">&times;</button>
+      </div>
+      <div class="manager-list" id="managerList"></div>
+      <div class="manager-actions">
+        <button class="secondary-button" id="addProduct" type="button">Agregar producto</button>
+        <button class="secondary-button" id="resetProducts" type="button">Restaurar</button>
+        <button class="primary-button" id="saveProducts" type="button">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
