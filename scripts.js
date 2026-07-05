@@ -81,7 +81,7 @@ const products = [
   }
 ];
 
-const WHATSAPP_NUMBER = "5215551234567";
+const WHATSAPP_NUMBER = "525571667676";
 const ADMIN_PASSWORD = "tere123";
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBqzOBAp2cbkblshwvTV0z-37Qcr4P5o7U",
