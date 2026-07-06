@@ -83,6 +83,8 @@ const products = [
 
 const WHATSAPP_NUMBER = "5571667676";
 const ADMIN_PASSWORD = "tere123";
+const ADMIN_SESSION_KEY = "dulceriaTereAdminSession";
+const ADMIN_SESSION_DURATION = 1000 * 60 * 60 * 24 * 30;
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBqzOBAp2cbkblshwvTV0z-37Qcr4P5o7U",
   authDomain: "dulces-f2f8a.firebaseapp.com",
@@ -314,7 +316,7 @@ function renderProducts() {
     return `
       <article class="product-card glass">
         <div class="product-image">
-          <img src="${product.image}" alt="${product.name}" loading="lazy">
+          <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">
           ${quantityInCart ? `<span class="product-cart-badge">En carrito: ${quantityInCart}</span>` : ""}
           <button class="favorite-button ${isFavorite ? "active" : ""}" type="button" data-favorite="${product.id}" aria-label="${isFavorite ? "Quitar" : "Agregar"} ${product.name} ${isFavorite ? "de" : "a"} favoritos" aria-pressed="${isFavorite}">
             &hearts;
@@ -520,7 +522,7 @@ function renderManager() {
       </label>
       <label class="manager-wide">
         Imagen
-        <input type="url" value="${escapeHtml(product.image)}" data-manager-field="image">
+        <input type="text" value="${escapeHtml(product.image)}" data-manager-field="image">
       </label>
       <label>
         Subir imagen
@@ -541,11 +543,29 @@ function openManager() {
   elements.managerModal.setAttribute("aria-hidden", "false");
 }
 
+function rememberAdminSession() {
+  localStorage.setItem(ADMIN_SESSION_KEY, String(Date.now() + ADMIN_SESSION_DURATION));
+}
+
+function hasAdminSession() {
+  const expiresAt = Number(localStorage.getItem(ADMIN_SESSION_KEY));
+  if (expiresAt > Date.now()) return true;
+
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+  return false;
+}
+
 function requestManagerAccess() {
+  if (hasAdminSession()) {
+    openManager();
+    return;
+  }
+
   const password = window.prompt("Contraseña de administrador:");
   if (password === null) return;
 
   if (password === ADMIN_PASSWORD) {
+    rememberAdminSession();
     openManager();
     return;
   }
@@ -647,16 +667,26 @@ async function updateManagerImage(input) {
 
   try {
     const compressed = await compressImage(file);
-    const imageUrl = cloudStorage ? await uploadProductImage(compressed, file.name) : compressed;
 
     console.log("Original:", (file.size / 1024 / 1024).toFixed(2), "MB");
     console.log("Comprimida:", (compressed.length * 3 / 4 / 1024).toFixed(0), "KB");
 
-    imageField.value = imageUrl;
-    previewImage.src = imageUrl;
+    imageField.value = compressed;
+    previewImage.src = compressed;
+
+    if (!cloudStorage) return;
+
+    try {
+      const imageUrl = await uploadProductImage(compressed, file.name);
+      imageField.value = imageUrl;
+      previewImage.src = imageUrl;
+    } catch (uploadError) {
+      console.warn("No se pudo subir la imagen a Firebase Storage. Se usara la copia comprimida.", uploadError);
+      alert("La imagen ya se puso como vista previa, pero no se pudo subir a Firebase Storage. Puedes guardar, aunque conviene revisar Firebase Storage.");
+    }
   } catch (error) {
-    console.warn("No se pudo subir la imagen.", error);
-    alert("No se pudo subir la imagen. Revisa la conexion o la configuracion de Firebase Storage.");
+    console.warn("No se pudo procesar la imagen.", error);
+    alert("No se pudo procesar la imagen. Prueba con otra foto en formato JPG o PNG.");
   } finally {
     input.disabled = false;
     input.value = "";
@@ -901,6 +931,14 @@ function bindEvents() {
   elements.managerList.addEventListener("change", event => {
     const fileInput = event.target.closest("[data-manager-file]");
     if (fileInput) updateManagerImage(fileInput);
+  });
+  elements.managerList.addEventListener("input", event => {
+    const imageField = event.target.closest('[data-manager-field="image"]');
+    if (!imageField) return;
+
+    const row = imageField.closest("[data-manager-row]");
+    const previewImage = row.querySelector(".manager-product-heading img");
+    previewImage.src = imageField.value.trim();
   });
   elements.managerModal.addEventListener("click", event => {
     if (event.target === elements.managerModal) closeManager();
