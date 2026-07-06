@@ -331,11 +331,18 @@ function renderProducts() {
             <small>${product.stock} en stock</small>
           </div>
           <div class="card-actions">
-            <button class="secondary-button" type="button" data-details="${product.id}">Detalles</button>
+            <button class="secondary-button details-button" type="button" data-details="${product.id}">Detalles</button>
             <button class="primary-button" type="button" data-cart="${product.id}">
               ${quantityInCart ? `Agregar (${quantityInCart})` : "Agregar"}
             </button>
           </div>
+          ${quantityInCart ? `
+            <div class="product-cart-controls" aria-label="Cantidad en carrito">
+              <strong>${quantityInCart}</strong>
+              <button type="button" data-cart="${product.id}" aria-label="Agregar una unidad de ${escapeHtml(product.name)}">+</button>
+              <button class="product-remove-button" type="button" data-card-decrease="${product.id}" aria-label="Quitar una unidad de ${escapeHtml(product.name)}">-</button>
+            </div>
+          ` : ""}
         </div>
       </article>
     `;
@@ -841,10 +848,12 @@ function bindEvents() {
     const cartButton = event.target.closest("[data-cart]");
     const detailsButton = event.target.closest("[data-details]");
     const favoriteButton = event.target.closest("[data-favorite]");
+    const cardDecreaseButton = event.target.closest("[data-card-decrease]");
 
     if (cartButton) addToCart(Number(cartButton.dataset.cart));
     if (detailsButton) openModal(Number(detailsButton.dataset.details));
     if (favoriteButton) toggleFavorite(Number(favoriteButton.dataset.favorite));
+    if (cardDecreaseButton) changeQuantity(Number(cardDecreaseButton.dataset.cardDecrease), -1);
   });
 
   elements.cartItems.addEventListener("click", event => {

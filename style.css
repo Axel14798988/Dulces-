@@ -541,8 +541,49 @@ body.dark .price {
 
 .card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(84px, 0.72fr) 1.28fr;
   gap: 8px;
+}
+
+.details-button {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.product-cart-controls {
+  display: grid;
+  grid-template-columns: 48px 42px 42px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.product-cart-controls button,
+.product-cart-controls strong {
+  min-height: 38px;
+  border-radius: 12px;
+}
+
+.product-cart-controls button {
+  border: 0;
+  color: var(--ink);
+  font-weight: 900;
+  background: var(--surface-strong);
+  cursor: pointer;
+}
+
+.product-cart-controls strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: rgba(20, 20, 35, 0.72);
+}
+
+.product-cart-controls .product-remove-button {
+  color: white;
+  background: var(--pink);
 }
 
 .empty-state {
