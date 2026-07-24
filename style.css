@@ -428,6 +428,8 @@ body.dark .hero-card div {
 .product-card {
   overflow: hidden;
   border-radius: var(--radius);
+  content-visibility: auto;
+  contain-intrinsic-size: 460px;
   transition: transform 200ms ease, box-shadow 200ms ease;
 }
 
@@ -954,6 +956,19 @@ body.dark .modal-price {
 }
 
 @media (max-width: 680px) {
+  .glass,
+  .hero-card div {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .product-card:hover,
+  .primary-button:hover,
+  .secondary-button:hover,
+  .icon-button:hover {
+    transform: none;
+  }
+
   .site-header {
     padding-inline: 10px;
   }

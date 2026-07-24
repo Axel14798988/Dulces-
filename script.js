@@ -497,6 +497,23 @@ function getNextProductId() {
   return Math.max(0, ...products.map(product => Number(product.id) || 0)) + 1;
 }
 
+function readManagerProducts() {
+  return [...elements.managerList.querySelectorAll("[data-manager-row]")].map((row, index) => {
+    const id = Number(row.dataset.managerRow) || index + 1;
+    const readField = field => row.querySelector(`[data-manager-field="${field}"]`)?.value || "";
+    return cleanProduct({
+      id,
+      name: readField("name"),
+      category: readField("category"),
+      price: readField("price"),
+      stock: readField("stock"),
+      description: readField("description"),
+      image: readField("image"),
+      tags: textToTags(readField("tags"))
+    }, id);
+  });
+}
+
 function renderManager() {
   elements.managerList.innerHTML = products.map(product => `
     <article class="manager-row" data-manager-row="${product.id}">
@@ -589,20 +606,7 @@ async function saveProductChanges() {
   elements.saveProducts.disabled = true;
   elements.saveProducts.textContent = cloudDatabase ? "Guardando en nube..." : "Guardando...";
 
-  const updatedProducts = [...elements.managerList.querySelectorAll("[data-manager-row]")].map((row, index) => {
-    const id = Number(row.dataset.managerRow) || index + 1;
-    const readField = field => row.querySelector(`[data-manager-field="${field}"]`)?.value || "";
-    return cleanProduct({
-      id,
-      name: readField("name"),
-      category: readField("category"),
-      price: readField("price"),
-      stock: readField("stock"),
-      description: readField("description"),
-      image: readField("image"),
-      tags: textToTags(readField("tags"))
-    }, id);
-  });
+  const updatedProducts = readManagerProducts();
 
   products.splice(0, products.length, ...updatedProducts);
   try {
@@ -649,7 +653,10 @@ async function resetProductChanges() {
   renderManager();
 }
 
-function addManagerProduct() {
+async function addManagerProduct() {
+  // Conserva lo que ya se escribió en el formulario antes de volver a dibujarlo.
+  const currentProducts = readManagerProducts();
+  products.splice(0, products.length, ...currentProducts);
   products.push({
     id: getNextProductId(),
     name: "Nuevo producto",
@@ -660,6 +667,20 @@ function addManagerProduct() {
     tags: ["Nuevo"],
     stock: 0
   });
+
+  elements.addProduct.disabled = true;
+  elements.addProduct.textContent = cloudDatabase ? "Guardando..." : "Guardando localmente...";
+  try {
+    // La copia local se guarda primero; si no hay señal, nada de lo capturado se pierde.
+    await saveCloudCatalog();
+  } catch (error) {
+    console.warn("El producto quedó guardado localmente, pero no se pudo sincronizar.", error);
+    alert("El producto quedó guardado en este teléfono, pero no se pudo enviar a la base de datos. Revisa tu conexión y pulsa Guardar cambios más tarde.");
+  } finally {
+    elements.addProduct.disabled = false;
+    elements.addProduct.textContent = "Agregar producto y guardar";
+  }
+
   renderManager();
 }
 
@@ -786,15 +807,25 @@ function toggleTheme() {
 
 function initParticles() {
   const canvas = document.querySelector("#particles");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const isSmallScreen = window.matchMedia("(max-width: 680px)").matches;
+
+  // En teléfonos se elimina una animación permanente para mantener fluido el desplazamiento.
+  if (isSmallScreen || prefersReducedMotion) {
+    canvas.remove();
+    return;
+  }
+
   const context = canvas.getContext("2d");
   const colors = ["#ff4fa3", "#18d4cf", "#ffffff"];
   let particles = [];
 
   function resize() {
-    canvas.width = window.innerWidth * window.devicePixelRatio;
-    canvas.height = window.innerHeight * window.devicePixelRatio;
-    context.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-    particles = Array.from({ length: Math.min(80, Math.floor(window.innerWidth / 16)) }, () => ({
+    const pixelRatio = Math.min(window.devicePixelRatio, 1.5);
+    canvas.width = window.innerWidth * pixelRatio;
+    canvas.height = window.innerHeight * pixelRatio;
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    particles = Array.from({ length: Math.min(48, Math.floor(window.innerWidth / 24)) }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       radius: Math.random() * 2.5 + 0.8,
@@ -804,6 +835,7 @@ function initParticles() {
   }
 
   function draw() {
+    if (document.hidden) return;
     context.clearRect(0, 0, window.innerWidth, window.innerHeight);
     particles.forEach(particle => {
       particle.y -= particle.speed;
@@ -822,6 +854,9 @@ function initParticles() {
   }
 
   window.addEventListener("resize", resize);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) requestAnimationFrame(draw);
+  });
   resize();
   draw();
 }
