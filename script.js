@@ -96,6 +96,10 @@ const FIREBASE_CONFIG = {
 };
 const FIREBASE_PRODUCTS_PATH = "dulceriaTere/products";
 const FIREBASE_PRODUCT_IMAGES_PATH = "dulceriaTere/product-images";
+const FIREBASE_ORDERS_PATH = "dulceriaTere/orders";
+const CATALOG_CACHE_KEY = "dulceriaTereProducts";
+const LOCAL_ORDERS_KEY = "dulceriaTerePendingOrders";
+const CLOUD_REQUEST_TIMEOUT = 7000;
 const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 const productDefaults = products.map(product => ({ ...product, tags: [...product.tags] }));
 let cloudDatabase = null;
@@ -135,7 +139,7 @@ function cleanProduct(product, fallbackId) {
 }
 
 function applyStoredCatalog() {
-  const storedProducts = readStoredArray("dulceriaTereProducts");
+  const storedProducts = readStoredArray(CATALOG_CACHE_KEY);
   if (!storedProducts.length) return;
   products.splice(0, products.length, ...storedProducts.map((product, index) => cleanProduct(product, index + 1)));
 }
@@ -171,39 +175,62 @@ async function connectCloudCatalog() {
 async function loadCloudCatalog() {
   const connected = await connectCloudCatalog();
   if (!connected) {
-    applyStoredCatalog();
-    return;
+    return false;
   }
 
   try {
-    const snapshot = await cloudDatabase.ref(FIREBASE_PRODUCTS_PATH).get();
+    const snapshot = await withTimeout(
+      cloudDatabase.ref(FIREBASE_PRODUCTS_PATH).get(),
+      CLOUD_REQUEST_TIMEOUT
+    );
     if (snapshot.exists()) {
       const cloudProducts = snapshot.val();
       if (Array.isArray(cloudProducts) && cloudProducts.length) {
         products.splice(0, products.length, ...cloudProducts.map((product, index) => cleanProduct(product, index + 1)));
         rememberProductsLocally();
+        return true;
       }
-      return;
+      return false;
     }
 
     await cloudDatabase.ref(FIREBASE_PRODUCTS_PATH).set(productDefaults);
+    return false;
   } catch (error) {
-    console.warn("No se pudo cargar el catalogo en la nube.", error);
-    applyStoredCatalog();
+    console.warn("No se pudo actualizar el catalogo desde la nube.", error);
+    return false;
   }
 }
 
+function withTimeout(promise, timeout) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error("La consulta tardó demasiado.")), timeout);
+    })
+  ]);
+}
+
 async function saveCloudCatalog() {
-  rememberProductsLocally();
+  try {
+    // El panel puede abrirse antes de que termine la sincronización inicial.
+    // En ese caso se conecta aquí para que el botón guarde primero en Firebase.
+    if (!cloudDatabase) {
+      const connected = await connectCloudCatalog();
+      if (!connected) throw new Error("No se pudo conectar con Firebase.");
+    }
 
-  if (!cloudDatabase) return;
-
-  await cloudDatabase.ref(FIREBASE_PRODUCTS_PATH).set(products);
+    await cloudDatabase.ref(FIREBASE_PRODUCTS_PATH).set(products);
+    rememberProductsLocally();
+  } catch (error) {
+    // Si no hay señal, el producto queda protegido en este dispositivo.
+    rememberProductsLocally();
+    throw error;
+  }
 }
 
 function rememberProductsLocally() {
   try {
-    localStorage.setItem("dulceriaTereProducts", JSON.stringify(products));
+    localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(products));
     localStorage.removeItem("dulceriaTereProductOverrides");
   } catch (error) {
     console.warn("No se pudo guardar una copia local del catalogo.", error);
@@ -215,6 +242,7 @@ const state = {
   query: "",
   cart: readStoredArray("dulceriaTereCart"),
   favorites: readStoredArray("dulceriaTereFavorites"),
+  fulfillment: localStorage.getItem("dulceriaTereFulfillment") || "delivery",
   selectedProduct: null
 };
 
@@ -234,6 +262,7 @@ const elements = {
   cartCount: document.querySelector("#cartCount"),
   clearCart: document.querySelector("#clearCart"),
   whatsappOrder: document.querySelector("#whatsappOrder"),
+  fulfillmentOptions: document.querySelector(".fulfillment-options"),
   themeToggle: document.querySelector("#themeToggle"),
   openBestSellers: document.querySelector("#openBestSellers"),
   brandMark: document.querySelector(".brand-mark"),
@@ -259,6 +288,7 @@ const elements = {
 function saveState() {
   localStorage.setItem("dulceriaTereCart", JSON.stringify(state.cart));
   localStorage.setItem("dulceriaTereFavorites", JSON.stringify(state.favorites));
+  localStorage.setItem("dulceriaTereFulfillment", state.fulfillment);
 }
 
 function getCategories() {
@@ -393,7 +423,7 @@ function renderCart() {
 
 function addToCart(productId) {
   const product = products.find(current => current.id === productId);
-  if (!product) return;
+  if (!product || product.stock <= 0) return;
 
   const existing = state.cart.find(item => item.id === productId);
   if (existing) {
@@ -640,8 +670,8 @@ async function resetProductChanges() {
   try {
     await saveCloudCatalog();
   } catch {
-    localStorage.removeItem("dulceriaTereProductOverrides");
-    localStorage.removeItem("dulceriaTereProducts");
+    // Sin conexión, conserva localmente el catálogo restaurado.
+    rememberProductsLocally();
   }
 
   state.cart = state.cart.filter(item => products.some(product => product.id === item.id));
@@ -754,43 +784,111 @@ function notifyCartUpdate() {
   elements.cartToggle.classList.add("cart-bump");
 }
 
-function buildWhatsappMessage() {
-  const lines = state.cart.map(item => {
-    const product = products.find(current => current.id === item.id);
-    if (!product) return "";
-    const subtotal = product.price * item.quantity;
-    return `- ${product.name}
+function getFulfillmentLabel() {
+  return state.fulfillment === "pickup" ? "Recoger en tienda" : "Envío a domicilio";
+}
+
+function buildWhatsappMessage(order) {
+  const lines = order.items.map(item => {
+    const subtotal = item.price * item.quantity;
+    return `- ${item.name}
   Cantidad: ${item.quantity}
   Subtotal: ${currency.format(subtotal)}`;
-  }).filter(Boolean);
-
-  const total = state.cart.reduce((sum, item) => {
-    const product = products.find(current => current.id === item.id);
-    return sum + (product ? product.price * item.quantity : 0);
-  }, 0);
+  });
 
   const message = [
     "Hola Dulcería Tere, quiero hacer este pedido:",
     "",
     lines.join("\n\n"),
     "",
-    `Total estimado: ${currency.format(total)}`,
+    `Total estimado: ${currency.format(order.total)}`,
+    `Forma de entrega: ${order.fulfillmentLabel}`,
     "",
-    "Mis datos:",
-    "Nombre:",
-    "Direccion o punto de entrega:",
-    "Comentarios:"
+    "Pedido registrado: " + order.id
   ].join("\n");
 
   return encodeURIComponent(message);
 }
 
-function sendWhatsappOrder() {
+function createOrder() {
+  const items = state.cart.map(item => {
+    const product = products.find(current => current.id === item.id);
+    if (!product || item.quantity > product.stock) return null;
+    return { id: product.id, name: product.name, price: product.price, quantity: item.quantity };
+  });
+
+  if (items.some(item => !item)) return null;
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  return {
+    id: "",
+    status: "Pendiente",
+    fulfillment: state.fulfillment,
+    fulfillmentLabel: getFulfillmentLabel(),
+    items,
+    total,
+    createdAt: new Date().toISOString()
+  };
+}
+
+async function saveOrderAndUpdateStock(order) {
+  if (!cloudDatabase) {
+    const connected = await connectCloudCatalog();
+    if (!connected) throw new Error("Sin conexión a Firebase.");
+  }
+
+  const orderReference = cloudDatabase.ref(FIREBASE_ORDERS_PATH).push();
+  order.id = orderReference.key;
+  const updatedProducts = products.map(product => {
+    const item = order.items.find(current => current.id === product.id);
+    return item ? { ...product, stock: product.stock - item.quantity } : product;
+  });
+
+  await cloudDatabase.ref().update({
+    [FIREBASE_PRODUCTS_PATH]: updatedProducts,
+    [`${FIREBASE_ORDERS_PATH}/${order.id}`]: order
+  });
+
+  products.splice(0, products.length, ...updatedProducts);
+  rememberProductsLocally();
+}
+
+function savePendingOrderLocally(order) {
+  const pendingOrders = readStoredArray(LOCAL_ORDERS_KEY);
+  pendingOrders.push({ ...order, id: `local-${Date.now()}`, status: "Pendiente de sincronizar" });
+  localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(pendingOrders));
+}
+
+async function sendWhatsappOrder() {
   if (!state.cart.length) {
     openCart();
     return;
   }
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${buildWhatsappMessage()}`, "_blank");
+
+  const order = createOrder();
+  if (!order) {
+    alert("Algún producto ya no tiene existencias suficientes. Revisa tu carrito.");
+    renderCart();
+    renderProducts();
+    return;
+  }
+
+  elements.whatsappOrder.disabled = true;
+  elements.whatsappOrder.textContent = "Guardando pedido...";
+  try {
+    await saveOrderAndUpdateStock(order);
+    state.cart = [];
+    saveState();
+    renderCart();
+    renderProducts();
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${buildWhatsappMessage(order)}`, "_blank");
+  } catch (error) {
+    console.warn("No se pudo guardar el pedido.", error);
+    savePendingOrderLocally(order);
+    alert("No pudimos registrar el pedido en línea. Se guardó una copia en este dispositivo; intenta enviarlo nuevamente cuando tengas señal.");
+  } finally {
+    elements.whatsappOrder.disabled = false;
+    elements.whatsappOrder.textContent = "Pedir por WhatsApp";
+  }
 }
 
 function applyThemeFromStorage() {
@@ -915,6 +1013,11 @@ function bindEvents() {
     renderProducts();
   });
   elements.whatsappOrder.addEventListener("click", sendWhatsappOrder);
+  elements.fulfillmentOptions.addEventListener("change", event => {
+    if (event.target.name !== "fulfillment") return;
+    state.fulfillment = event.target.value;
+    saveState();
+  });
   elements.themeToggle.addEventListener("click", toggleTheme);
   elements.openBestSellers.addEventListener("click", () => {
     state.category = "Todos";
@@ -990,13 +1093,30 @@ function bindEvents() {
 }
 
 async function init() {
-  await loadCloudCatalog();
+  // Se pinta primero la última copia disponible. La actualización desde Firebase
+  // ocurre en segundo plano, así la página sigue respondiendo con mala señal.
+  applyStoredCatalog();
   applyThemeFromStorage();
   renderCategories();
   renderProducts();
   renderCart();
+  const selectedFulfillment = elements.fulfillmentOptions.querySelector(`[value="${state.fulfillment}"]`);
+  if (selectedFulfillment) selectedFulfillment.checked = true;
   bindEvents();
   initParticles();
+
+  const catalogWasUpdated = await loadCloudCatalog();
+  if (!catalogWasUpdated) return;
+
+  if (state.category !== "Todos" && !products.some(product => product.category === state.category)) {
+    state.category = "Todos";
+  }
+  state.cart = state.cart.filter(item => products.some(product => product.id === item.id));
+  state.favorites = state.favorites.filter(id => products.some(product => product.id === id));
+  saveState();
+  renderCategories();
+  renderProducts();
+  renderCart();
 }
 
 async function compressImage(file, maxWidth = 800, quality = 0.8) {
@@ -1042,6 +1162,14 @@ async function compressImage(file, maxWidth = 800, quality = 0.8) {
 
     });
 
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch(error => {
+      console.warn("No se pudo activar la caché de la tienda.", error);
+    });
+  });
 }
 
 init();
