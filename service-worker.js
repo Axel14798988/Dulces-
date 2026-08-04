@@ -1,4 +1,4 @@
-const CACHE_NAME = "dulceria-tere-v1";
+const CACHE_NAME = "dulceria-tere-v3";
 const APP_FILES = [
   "./",
   "./index.html",

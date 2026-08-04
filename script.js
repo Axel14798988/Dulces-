@@ -104,6 +104,7 @@ const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "
 const productDefaults = products.map(product => ({ ...product, tags: [...product.tags] }));
 let cloudDatabase = null;
 let cloudStorage = null;
+let cartNoticeTimer = null;
 
 function readStoredArray(key) {
   try {
@@ -227,6 +228,7 @@ async function saveCloudCatalog() {
     throw error;
   }
 }
+
 
 function rememberProductsLocally() {
   try {
@@ -368,9 +370,9 @@ function renderProducts() {
           </div>
           ${quantityInCart ? `
             <div class="product-cart-controls" aria-label="Cantidad en carrito">
+              <button class="product-remove-button" type="button" data-card-decrease="${product.id}" aria-label="Quitar una unidad de ${escapeHtml(product.name)}">-</button>
               <strong>${quantityInCart}</strong>
               <button type="button" data-cart="${product.id}" aria-label="Agregar una unidad de ${escapeHtml(product.name)}">+</button>
-              <button class="product-remove-button" type="button" data-card-decrease="${product.id}" aria-label="Quitar una unidad de ${escapeHtml(product.name)}">-</button>
             </div>
           ` : ""}
         </div>
@@ -436,8 +438,19 @@ function addToCart(productId) {
   renderCart();
   renderProducts();
   notifyCartUpdate();
+  showCartNotice(product);
 }
 
+function showCartNotice(product) {
+  if (!elements.cartNotice) return;
+
+  elements.cartNotice.textContent = `${product.name} agregado al carrito`;
+  elements.cartNotice.classList.add("show");
+  window.clearTimeout(cartNoticeTimer);
+  cartNoticeTimer = window.setTimeout(() => {
+    elements.cartNotice.classList.remove("show");
+  }, 2200);
+}
 function changeQuantity(productId, amount) {
   const product = products.find(current => current.id === productId);
   const item = state.cart.find(current => current.id === productId);
