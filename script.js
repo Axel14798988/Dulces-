@@ -1,107 +1,21 @@
-const products = [
-  {
-    id: 1,
-    name: "Gomitas arcoiris",
-    category: "Gomitas",
-    price: 45,
-    description: "Bolsa surtida con gomitas suaves, acidas y frutales para compartir.",
-    image: "https://images.unsplash.com/photo-1581798459219-318e76aecc7b?auto=format&fit=crop&w=900&q=80",
-    tags: ["Nuevo", "Mas vendido"],
-    stock: 24
-  },
-  {
-    id: 2,
-    name: "Chocolates mixtos",
-    category: "Chocolates",
-    price: 89,
-    description: "Seleccion cremosa de chocolates en mini piezas para mesa de dulces.",
-    image: "https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&w=900&q=80",
-    tags: ["Oferta"],
-    stock: 18
-  },
-  {
-    id: 3,
-    name: "Paletas fiesta",
-    category: "Paletas",
-    price: 39,
-    description: "Paquete de paletas coloridas ideal para fiestas, pinatas y regalos.",
-    image: "https://images.unsplash.com/photo-1589712186148-03ec3182895f?auto=format&fit=crop&w=900&q=80",
-    tags: ["Mas vendido"],
-    stock: 35
-  },
-  {
-    id: 4,
-    name: "Botana enchilada",
-    category: "Botanas",
-    price: 52,
-    description: "Crujiente mezcla enchilada con toque acidito y mucho sabor mexicano.",
-    image: "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=900&q=80",
-    tags: ["Nuevo"],
-    stock: 20
-  },
-  {
-    id: 5,
-    name: "Mazapan artesanal",
-    category: "Tradicionales",
-    price: 32,
-    description: "Dulce tradicional de cacahuate con textura suave y sabor casero.",
-    image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=900&q=80",
-    tags: ["Oferta"],
-    stock: 28
-  },
-  {
-    id: 6,
-    name: "Caja regalo dulce",
-    category: "Regalos",
-    price: 149,
-    description: "Caja con dulces premium, chocolates y detalles lista para regalar.",
-    image: "https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&w=900&q=80",
-    tags: ["Nuevo", "Oferta"],
-    stock: 11
-  },
-  {
-    id: 7,
-    name: "Caramelos surtidos",
-    category: "Caramelos",
-    price: 29,
-    description: "Caramelos frutales envueltos individualmente para negocio o evento.",
-    image: "https://images.unsplash.com/photo-1575224526797-5730d09d781d?auto=format&fit=crop&w=900&q=80",
-    tags: ["Mas vendido"],
-    stock: 40
-  },
-  {
-    id: 8,
-    name: "Mesa dulce mini",
-    category: "Regalos",
-    price: 219,
-    description: "Kit practico para montar una mesa dulce pequena con variedad premium.",
-    image: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?auto=format&fit=crop&w=900&q=80",
-    tags: ["Nuevo", "Mas vendido"],
-    stock: 8
-  }
-];
+import {
+  productsData,
+  WHATSAPP_NUMBER,
+  ADMIN_PASSWORD,
+  ADMIN_SESSION_KEY,
+  ADMIN_SESSION_DURATION,
+  FIREBASE_CONFIG,
+  FIREBASE_PRODUCTS_PATH,
+  FIREBASE_PRODUCT_IMAGES_PATH,
+  FIREBASE_ORDERS_PATH,
+  CATALOG_CACHE_KEY,
+  LOCAL_ORDERS_KEY,
+  CLOUD_REQUEST_TIMEOUT,
+  currency,
+  productDefaults
+} from "./js/config.js";
 
-const WHATSAPP_NUMBER = "5571667676";
-const ADMIN_PASSWORD = "tere123";
-const ADMIN_SESSION_KEY = "dulceriaTereAdminSession";
-const ADMIN_SESSION_DURATION = 1000 * 60 * 60 * 24 * 30;
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBqzOBAp2cbkblshwvTV0z-37Qcr4P5o7U",
-  authDomain: "dulces-f2f8a.firebaseapp.com",
-  databaseURL: "https://dulces-f2f8a-default-rtdb.firebaseio.com/",
-  projectId: "dulces-f2f8a",
-  storageBucket: "dulces-f2f8a.firebasestorage.app",
-  messagingSenderId: "656690572778",
-  appId: "1:656690572778:web:1482f1ee532c5edc421693"
-};
-const FIREBASE_PRODUCTS_PATH = "dulceriaTere/products";
-const FIREBASE_PRODUCT_IMAGES_PATH = "dulceriaTere/product-images";
-const FIREBASE_ORDERS_PATH = "dulceriaTere/orders";
-const CATALOG_CACHE_KEY = "dulceriaTereProducts";
-const LOCAL_ORDERS_KEY = "dulceriaTerePendingOrders";
-const CLOUD_REQUEST_TIMEOUT = 7000;
-const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
-const productDefaults = products.map(product => ({ ...product, tags: [...product.tags] }));
+const products = [...productsData];
 let cloudDatabase = null;
 let cloudStorage = null;
 let cartNoticeTimer = null;
@@ -345,6 +259,8 @@ function renderProducts() {
     const isFavorite = state.favorites.includes(product.id);
     const cartItem = state.cart.find(item => item.id === product.id);
     const quantityInCart = cartItem ? cartItem.quantity : 0;
+    const isOutOfStock = product.stock === 0;
+    const canAddMore = quantityInCart < product.stock;
     return `
       <article class="product-card glass">
         <div class="product-image">
@@ -364,15 +280,18 @@ function renderProducts() {
           </div>
           <div class="card-actions">
             <button class="secondary-button details-button" type="button" data-details="${product.id}">Detalles</button>
-            <button class="primary-button" type="button" data-cart="${product.id}">
-              ${quantityInCart ? `Agregar (${quantityInCart})` : "Agregar"}
-            </button>
+            ${isOutOfStock
+              ? '<button class="primary-button" type="button" disabled>Agotado</button>'
+              : `<button class="primary-button" type="button" data-cart="${product.id}" ${!canAddMore ? 'disabled' : ''}>
+                  ${quantityInCart ? `Agregar (${quantityInCart})` : "Agregar"}
+                </button>`
+            }
           </div>
           ${quantityInCart ? `
             <div class="product-cart-controls" aria-label="Cantidad en carrito">
               <button class="product-remove-button" type="button" data-card-decrease="${product.id}" aria-label="Quitar una unidad de ${escapeHtml(product.name)}">-</button>
               <strong>${quantityInCart}</strong>
-              <button type="button" data-cart="${product.id}" aria-label="Agregar una unidad de ${escapeHtml(product.name)}">+</button>
+              <button type="button" data-cart="${product.id}" aria-label="Agregar una unidad de ${escapeHtml(product.name)}" ${!canAddMore ? 'disabled' : ''}>+</button>
             </div>
           ` : ""}
         </div>
@@ -500,6 +419,19 @@ function openModal(productId) {
   elements.modalDescription.textContent = product.description;
   elements.modalTags.innerHTML = product.tags.map(createTag).join("");
   elements.modalPrice.textContent = currency.format(product.price);
+
+  const cartItem = state.cart.find(item => item.id === product.id);
+  const quantityInCart = cartItem ? cartItem.quantity : 0;
+  const canAddMore = quantityInCart < product.stock;
+
+  if (product.stock === 0) {
+    elements.modalAddCart.textContent = "Agotado";
+    elements.modalAddCart.disabled = true;
+  } else {
+    elements.modalAddCart.textContent = "Agregar al carrito";
+    elements.modalAddCart.disabled = !canAddMore;
+  }
+
   updateModalFavorite();
   elements.modal.classList.add("open");
   elements.modal.setAttribute("aria-hidden", "false");
@@ -510,6 +442,8 @@ function closeModal() {
   elements.modal.setAttribute("aria-hidden", "true");
   elements.modalImage.style.transform = "scale(1)";
   state.selectedProduct = null;
+  elements.modalAddCart.textContent = "Agregar al carrito";
+  elements.modalAddCart.disabled = false;
 }
 
 function updateModalFavorite() {
